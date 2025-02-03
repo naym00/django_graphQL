@@ -8,6 +8,57 @@ import user.models
 from django.conf import settings
 from django.db import migrations, models
 
+def insert_to_db(**kwargs):
+    bulk_values = []
+    for value_list in kwargs.get('values_list', []):
+        prepare_dict = {}
+        for index, value in enumerate(value_list):
+            prepare_dict[kwargs['keys'][index]] = value
+        bulk_values.append(kwargs['model'](**prepare_dict))
+    kwargs['model'].objects.bulk_create(bulk_values)
+        
+
+def add_initial_data(apps, schema_editor):
+    insert_to_db(
+        model=apps.get_model('user', 'Grade'),
+        keys=['name'],
+        values_list=[['Grade 1'], ['Grade 2'], ['Grade 3'], ['Grade 4'], ['Grade 5']]
+    )
+    
+    Grade = apps.get_model('user', 'Grade')
+    g1 = Grade.objects.get(name='Grade 1')
+    g2 = Grade.objects.get(name='Grade 2')
+    g3 = Grade.objects.get(name='Grade 3')
+    g4 = Grade.objects.get(name='Grade 4')
+    insert_to_db(
+        model=apps.get_model('user', 'Designation'),
+        keys=['name', 'grade'],
+        values_list=[
+            ['Senior Backend', g1],
+            ['Associate Backend', g2],
+            ['Junior Backend', g3],
+            ['Intern Backend', g4],
+            ['Senior Frontend', g1],
+            ['Associate Frontend', g2],
+            ['Junior Frontend', g3],
+            ['Intern Frontend', g4]
+        ]
+    )
+    
+    insert_to_db(
+        model=apps.get_model('user', 'Shift'),
+        keys=['name', 'in_time', 'out_time'],
+        values_list=[['Morning', '08:00:00', '17:00:00'], ['Night', '14:00:00', '22:00:00']]
+    )
+    
+    insert_to_db(
+        model=apps.get_model('user', 'Religion'),
+        keys=['name'],
+        values_list=[['Islam'], ['Hinduism'], ['Christianity'], ['Buddhism']]
+    )
+    
+    apps.get_model('user', 'User').objects.create_superuser(username='admin', password='admin')
+
 
 class Migration(migrations.Migration):
 
@@ -109,4 +160,5 @@ class Migration(migrations.Migration):
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='note_users', to=settings.AUTH_USER_MODEL)),
             ],
         ),
+        migrations.RunPython(add_initial_data),
     ]

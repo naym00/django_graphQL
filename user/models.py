@@ -41,7 +41,6 @@ class User(AbstractUser):
     gender = models.CharField(max_length=10, choices=CHOICE.GENDER, blank=True, null=True)
     religion = models.ForeignKey(Religion, on_delete=models.SET_NULL, blank=True, null=True, related_name='religion_users')
     phone = models.CharField(max_length=14, unique=True, blank=True, null=True)
-    grade = models.ForeignKey(Grade, on_delete=models.SET_NULL, blank=True, null=True, related_name='user_grade')
     shift = models.ForeignKey(Shift, on_delete=models.SET_NULL, blank=True, null=True, related_name='user_shift')
     photo = models.ImageField(upload_to=upload_user_photo, blank=True, null=True)
     created_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='createdby_users')
