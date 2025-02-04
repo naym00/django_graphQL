@@ -1,6 +1,8 @@
 import graphene
+from helps.common.generic import Generichelps as ghelp
 from graphene_django.types import DjangoObjectType
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ValidationError
 from user import models as M_USER
     
 class UserType(DjangoObjectType):
@@ -23,6 +25,11 @@ class Query(graphene.ObjectType):
         return M_USER.User.objects.get(username=username)
     
 class CreateUser(graphene.Mutation):
+    user = graphene.Field(UserType)
+    success = graphene.Boolean()
+    error_message = graphene.List(graphene.String)
+    success_message = graphene.List(graphene.String)
+    
     class Arguments:
         password = graphene.String(required=True)
         username = graphene.String(required=True)
@@ -36,22 +43,32 @@ class CreateUser(graphene.Mutation):
         religion = graphene.Int(required=False)
         shift = graphene.Int(required=False)
 
-    user = graphene.Field(UserType)
-
     def mutate(self, info, password, username, **kwargs):
-        user = M_USER.User.objects.create(
-            password=make_password(password),
-            username=username,
-            first_name=kwargs.get('first_name'),
-            last_name=kwargs.get('last_name'),
-            email=kwargs.get('email'),
-            gender=kwargs.get('gender'),
-            phone=kwargs.get('phone'),
-            designation=M_USER.Designation.objects.get(id=kwargs.get('designation')),
-            religion=M_USER.Religion.objects.get(id=kwargs.get('religion')),
-            shift=M_USER.Shift.objects.get(id=kwargs.get('shift'))
-        )
-        return CreateUser(user=user)
+        error_messages = []
+        success_messages = []
+        instance = None
+        
+        ghelp().validate_values(kwargs.get('email'), 'email', error_messages)
+        
+        if not error_messages:
+            try:
+                instance = M_USER.User.objects.create(
+                    password=make_password(password),
+                    username=username,
+                    first_name=kwargs.get('first_name'),
+                    last_name=kwargs.get('last_name'),
+                    email=kwargs.get('email'),
+                    gender=kwargs.get('gender'),
+                    phone=kwargs.get('phone'),
+                    designation=M_USER.Designation.objects.get(id=kwargs.get('designation')),
+                    religion=M_USER.Religion.objects.get(id=kwargs.get('religion')),
+                    shift=M_USER.Shift.objects.get(id=kwargs.get('shift'))
+                )
+                success_messages.append('User created successfully.')
+            except: error_messages.append('Couldn\'t create user!')
+        
+        if error_messages: return CreateUser(success=False, error_message=error_messages)
+        else: return CreateUser(success=True, user=instance, success_message=success_messages)
     
 class Mutation(graphene.ObjectType):
     create_user = CreateUser.Field()

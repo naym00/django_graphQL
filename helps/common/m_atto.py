@@ -1,3 +1,4 @@
+from django.core.validators import validate_email
 from helps.common.n_zepto import Zeptohelps
 from datetime import datetime, date, timedelta
 
@@ -85,3 +86,9 @@ class Attohelps(Zeptohelps):
          target_date = self.conv_to_date(target_date)
          if target_date != None: method_date = target_date
       return method_date.year, method_date.month, method_date.day
+   
+   def check_valid_email(self, email):
+      flag = True
+      try: validate_email(email,)
+      except: flag = False
+      return flag

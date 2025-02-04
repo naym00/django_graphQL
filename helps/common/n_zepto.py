@@ -1,4 +1,3 @@
-
 from datetime import datetime, date, timedelta
 import calendar
 import json
@@ -53,3 +52,17 @@ class Zeptohelps:
       try: os.remove(path)
       except: flag = False
       return flag
+   
+   def validation_messages(self):
+      return {
+         'email': {
+            'message': 'Invalid email format.',
+            'format': [],
+            'example': ['example@example.com']
+         },
+         'ph_num': {
+            'message': 'Invalid number.',
+            'format': [],
+            'example': ['+8801700000000', '01700000000']
+         }
+      }
